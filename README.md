@@ -53,8 +53,11 @@ To remove boilerplate you can use (or create your own dsl):
               (DELETE [])))
 
 (GET "/posts"
-  (GET "resent")
-  (POST []))
+  (POST [])
+  (GET "popular")
+  (GET :id
+    (PUT [])
+    (GET "comments" )))
 
 ```
 
