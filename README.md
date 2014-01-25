@@ -1,10 +1,28 @@
 # arroute
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library designed to deal with routes as data.
 
-## Usage
+Represent routes as tree of clojure data structures
 
-FIXME
+```clojure
+; [method url meta nested-routes]
+
+[[:get ["posts"] {:meta "meta"}
+  [[:post [] {} []]
+   [:get [:id] {}
+    [[:put [] {} []]
+     [:delete [] {} []]
+     [:get ["comments"] {} []]]]]]]
+
+```
+
+Dispatching becomes just search in tree and can be done as
+
+```clojure
+(dispatch {:uri "/posts/1" :method :put} routes)  => [:put ["posts" :id] {} []])
+```
+
+For more information see `tests/`
 
 ## License
 
