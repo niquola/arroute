@@ -2,12 +2,29 @@
 
 A Clojure library designed to deal with routes as data.
 
+Routes are just clojure data structure, which means:
+
+* Composable
+* Transformabe
+* Can be used as meta information
+
+Dispatching is just search in tree
+wich allow you any customization and full control.
+
+### Basic API
+
+Represent url pattern as vector:
+
+```clojure
+"/users/1/profile/" => ["users" :id "profile"]
+```
+
 Represent routes as tree of clojure data structures
 
 ```clojure
 ; [method url meta nested-routes]
 
-[[:get ["posts"] {:meta "meta"}
+[[:get ["posts"] {:meta "u can put any information here"}
   [[:post [] {} []]
    [:get [:id] {}
     [[:put [] {} []]
@@ -22,7 +39,31 @@ Dispatching becomes just search in tree and can be done as
 (dispatch {:uri "/posts/1" :method :put} routes)  => [:put ["posts" :id] {} []])
 ```
 
+### DSL
+
+To remove boilerplate you can use (or create your own dsl):
+
+```clojure
+(GET "url/:id" {:meta "any info"}) => [:get ["url" :id] {:meta "any info"} []]
+(resources "users")
+    => (GET name
+         (POST [])
+         (GET :id
+              (PUT [])
+              (DELETE [])))
+
+(GET "/posts"
+  (GET "resent")
+  (POST []))
+
+```
+
 For more information see `tests/`
+
+## TODO
+
+* generate named routes
+* usage in ring application example
 
 ## License
 
