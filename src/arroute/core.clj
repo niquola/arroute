@@ -34,15 +34,32 @@
       (apply hash-map (apply concat (filter (fn [[k v]] (keyword? k)) pairs)))
       false)))
 
-(defn dispatch [request routes]
-  (first (filter
-           (fn [route]
-             (and
-               (= (or (:method request) (:request-method request)) (get-meth route))
-               (match-route
-                 (pathify (:uri request))
-                 (get-route route))))
-           (flatten-routes routes))))
+(defn get-method [request]
+  (keyword
+    (or
+      (get-in request [:form-params "_method"])
+      (:method request)
+      (:request-method request))))
+
+(defn match-request [route request]
+  (match-route
+    (pathify (:uri request))
+    (get-route route)))
+
+(defn dispatch [request routes handler err]
+  (let [r (first
+            (filter
+              (fn [route]
+                (and
+                  (= (get-method request) (get-meth route))
+                  (match-request route request)))
+              (flatten-routes routes)))]
+    (if r
+      (handler r
+        (assoc request :params
+               (merge (:params request)
+                      (match-request r request))))
+      (err r))))
 
 (defn mk-meth [m url & args]
   (let [url (if (vector? url) url [url])
