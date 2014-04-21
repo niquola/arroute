@@ -14,26 +14,31 @@
       [] pattern)
     (str/join "/")))
 
-(defn- pathify [path]
-  (str/split (str/replace path #"^/" "") #"/"))
+(defn pathify [path]
+  (filterv #(not (str/blank? %))
+           (str/split path #"/")))
+
+(defn- pair-matched [k v]
+  (or (keyword? k) (= k v)))
+
+(defn- assoc-acc [a k v]
+  (if (keyword? k) (assoc a k v) a))
+
+(defn match-path [path pattern]
+  (and
+    (= (count path) (count pattern))
+    (loop [a {}
+           [v & path] path
+           [k & pattern] pattern]
+      (cond
+        (not (pair-matched k v)) nil
+        (and (empty? path) (empty? pattern)) (assoc-acc a k v)
+        :else (recur (assoc-acc a k v) path pattern)))))
 
 (defn match-url
   "match url by pattern and return hash of params"
   [url pattern]
-  (let [url-parts (pathify url)
-        pairs (map vector pattern url-parts)]
-    (println pairs)
-    (and
-      (= (count url-parts) (count pattern))
-      (reduce
-        (fn [acc [v1 v2]]
-          (if (or (= nil acc)
-                  (and (not (keyword? v1))
-                       (not (= v1 v2))))
-            nil
-            (if (keyword? v1) (assoc acc v1 v2) acc)))
-        {}
-        pairs))))
+  (match-path (pathify url) pattern))
 
 (defn def-routes
   "create routes zipper"
@@ -48,9 +53,8 @@
   (mapcat #(:path %) (conj (z/path zp-cur) (z/node zp-cur))))
 
 (defn get-attr [zp attr-name]
-"get attribute from node or his parent nodes"
+  "get attribute from node or his parent nodes"
   (loop [loc zp]
-    (println (z/node loc))
     (if (contains? (z/node loc) attr-name)
       (attr-name (z/node loc))
       (if (z/end? loc)
@@ -60,12 +64,11 @@
 (defn find-route-rule
   "get routes-zipper and method path pair
   return zipper cursor if matched else nil"
-  [routes-zipper [meth path]]
-  (loop [loc routes-zipper]
-    ; TODO: use pathified path for efficiency
-    (if (and (match-url path (current-path loc))
-             (= meth (:method (z/node loc))))
-      loc
-      (if (z/end? loc)
-        nil
-        (recur (z/next loc))))))
+  [routes-zipper [meth uri]]
+  (let [path (pathify uri)]
+    (loop [loc routes-zipper]
+      (cond
+        (and (match-path path (current-path loc))
+             (= meth (:method (z/node loc)))) loc
+        (z/end? loc) nil
+        :else (recur (z/next loc))))))
