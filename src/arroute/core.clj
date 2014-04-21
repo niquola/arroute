@@ -14,14 +14,15 @@
       [] pattern)
     (str/join "/")))
 
-(defn- pathify [path] ;move to url
-  (str/split path #"/"))
+(defn- pathify [path]
+  (str/split (str/replace path #"^/" "") #"/"))
 
 (defn match-url
   "match url by pattern and return hash of params"
   [url pattern]
   (let [url-parts (pathify url)
         pairs (map vector pattern url-parts)]
+    (println pairs)
     (and
       (= (count url-parts) (count pattern))
       (reduce
@@ -49,6 +50,7 @@
 (defn get-attr [zp attr-name]
 "get attribute from node or his parent nodes"
   (loop [loc zp]
+    (println (z/node loc))
     (if (contains? (z/node loc) attr-name)
       (attr-name (z/node loc))
       (if (z/end? loc)
@@ -62,7 +64,7 @@
   (loop [loc routes-zipper]
     ; TODO: use pathified path for efficiency
     (if (and (match-url path (current-path loc))
-             (= meth (get-attr loc :method)))
+             (= meth (:method (z/node loc))))
       loc
       (if (z/end? loc)
         nil

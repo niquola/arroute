@@ -33,6 +33,10 @@
         routes
         [:POST "user/5/activate"])  => nil
 
+      (find-route-rule
+        routes
+        [:POST "users"])  => nil
+
       (get-attr
         (find-route-rule
           routes [:POST "users/5/activate"])
