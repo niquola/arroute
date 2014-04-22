@@ -55,11 +55,12 @@
 (defn get-attr [zp attr-name]
   "get attribute from node or his parent nodes"
   (loop [loc zp]
-    (if (contains? (z/node loc) attr-name)
-      (attr-name (z/node loc))
-      (if (z/end? loc)
-        nil
-        (recur (z/up loc))))))
+    (when-let [node (and loc (z/node loc))]
+      (println (keys node))
+      (if (contains? node attr-name)
+        (attr-name node)
+        (when (not (z/end? loc))
+          (recur (z/up loc)))))))
 
 (defn find-route-rule
   "get routes-zipper and method path pair
