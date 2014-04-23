@@ -56,7 +56,6 @@
   "get attribute from node or his parent nodes"
   (loop [loc zp]
     (when-let [node (and loc (z/node loc))]
-      (println (keys node))
       (if (contains? node attr-name)
         (attr-name node)
         (when (not (z/end? loc))
