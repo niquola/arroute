@@ -23,18 +23,18 @@
 
 (def routes
   (def-routes
-    {:path []
+    {:path [] :filter [1]
      :nested
      [{:path [] :method :get :name "root"}
-      {:path ["users"] :ns 'users
+      {:path ["users"] :ns 'users :filter [2]
        :nested
        [{:method :get :desc "List users"}
         {:method :post :desc "Create user" :auth [:admin]}
-        {:path [:id]
+        {:path [:id] :filter [3]
          :nested
          [{:method :get :desc "Show user"}
           {:method :put :desc "Update user"}
-          {:method :post :path ["activate"] :action 'activate} ]}]}]}))
+          {:method :post :filter [4] :path ["activate"] :action 'activate} ]}]}]}))
 
 (fact "route is hash-map & can be nested"
       (find-route-rule
@@ -53,7 +53,19 @@
           [:get "/"])
         :name)  => "root"
 
+      (extract-params
+        (find-route-rule
+          routes [:post "/users/5/activate"])
+        "/users/5/activate")  => {:id "5"}
+
       (get-attr
         (find-route-rule
           routes [:post "users/5/activate"])
         :action)  => 'activate)
+
+(fact "collect attr"
+      (collect-attr
+        (find-route-rule
+          routes
+          [:post "users/5/activate"])
+        :filter)  => [[1] [2] [3] [4]])

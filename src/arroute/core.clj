@@ -61,6 +61,20 @@
         (when (not (z/end? loc))
           (recur (z/up loc)))))))
 
+(defn collect-attr
+  "collect attr from all parents into seq from root to leaf"
+  [zp attr-name]
+  (let [prs (conj (z/path zp) (z/node zp))]
+    (reduce (fn [acc node]
+              (if (contains? node attr-name)
+                (conj acc (attr-name node))
+                acc))
+            [] prs)))
+
+(defn extract-params [loc uri]
+  (-> (pathify uri)
+      (match-path (current-path loc))))
+
 (defn find-route-rule
   "get routes-zipper and method path pair
   return zipper cursor if matched else nil"
